@@ -216,6 +216,26 @@ public class Main {
 //        graphAlgorithms.readGraph();
 //        int[] cost = new int[graphAlgorithms.size()];
 //        int[] parent = new int[graphAlgorithms.size()];
+//        Dijksta dj = new Dijksta(cost,parent, graphAlgorithms.graph);
+//
+//
+//        ArrayList<ArrayList<ArrayList<Integer>>> paths = dj.pathsBetweenAllPairs();
+//        for (int i = 0; i < paths.size(); i++) {
+//            ArrayList<ArrayList<Integer>> inner_paths = paths.get(i);
+//            for (int j = 0; j < inner_paths.size(); j++) {
+//                ArrayList<Integer> path = inner_paths.get(j);
+//                System.out.print("Path from " + i + " to " + j + ": ");
+//                for (int k = 0; k < path.size(); k++) {
+//                    System.out.print(path.get(k));
+//                    if (k < path.size() - 1) {
+//                        System.out.print(" -> ");
+//                    }
+//                }
+//                System.out.println();
+//            }
+//
+//        }
+
 //        System.out.println(graphAlgorithms.bellmanFord(0, cost, parent));
 //        for (int i = 0; i < graphAlgorithms.size(); i++) {
 //            System.out.println("Cost to reach " + i + " is " + cost[i]);
