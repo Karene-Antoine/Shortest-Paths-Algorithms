@@ -1,5 +1,3 @@
-package org.example;
-
 import javax.lang.model.type.NullType;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,8 +63,10 @@ public class Dijkstra {
     }
 
     public String get_path(int[] parent , int[] cost , int source , int destination){
-        if(cost[destination] == Integer.MAX_VALUE)
-            return null;
+        if(cost[destination] == Integer.MAX_VALUE) {
+            String path = "No path from " + String.valueOf(source) + " to " + String.valueOf(destination) +"." ;
+            return path ;
+        }
         else {
             Stack<Integer> stack = new Stack<>() ;
             int node = destination ;
@@ -81,6 +81,7 @@ public class Dijkstra {
                 path = path + String.valueOf(stack.pop()) +" - " ;
             }
             path = path.substring(0 , path.length()-3) ;
+            path = path + "." ;
             return path ;
         }
     }
@@ -88,6 +89,8 @@ public class Dijkstra {
     public String get_path_from_source (int[][] parent , int[][] cost , int source , int destination){
         return get_path(parent[source] , cost[source] , source , destination) ;
     }
+
+
 //    public int[] cost_to_allnodes(int source) {
 //        dijkstra(source, cost, parent);
 //        return cost;
@@ -129,8 +132,12 @@ public class Dijkstra {
         dijkstra.cost_between_allpairs(cost , parent);
         for(int i= 0 ; i<4 ; i++){
             for(int j=0 ; j<4 ; j++){
-                System.out.println("cost from " +i +" to " + j + " = " + dijkstra.cost_from_source(cost , i , j)) ;
-                System.out.println("path form " +j +" to " + j + " = " + dijkstra.get_path_from_source(parent , cost , i , j)) ;
+                System.out.print("path form " +i +" to " + j + " = " + dijkstra.get_path_from_source(parent , cost , i , j)) ;
+                int path_cost = dijkstra.cost_from_source(cost , i , j) ;
+                if(path_cost!=Integer.MAX_VALUE)
+                    System.out.println(" With cost = " + path_cost +".") ;
+                else
+                    System.out.println(" With cost = INFINITY.") ;
             }
         }
 
