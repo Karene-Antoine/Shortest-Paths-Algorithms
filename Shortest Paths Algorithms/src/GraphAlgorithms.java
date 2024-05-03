@@ -1,3 +1,6 @@
+package org.example;
+
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
@@ -5,25 +8,16 @@ import java.util.Scanner;
 
 public class GraphAlgorithms implements IGraphAlg{
     private String filePath;
-
-
-//    public int[][] getGraph() {
-//        return graph;
-//    }
-//
-//    public void setGraph(int[][] graph) {
-//        this.graph = graph;
-//    }
-
     private int[][] graph;
     public GraphAlgorithms(String filePath){
         this.filePath = filePath;
+        this.readGraph();
     }
 
-    public void readGraph(){
+    private void readGraph(){
         // Read the graph from the file
         try {
-            File file = new File(filePath);
+            File file = new File(this.filePath);
             Scanner scanner = new Scanner(file);
 
             // Read number of vertices and edges
@@ -31,29 +25,27 @@ public class GraphAlgorithms implements IGraphAlg{
             int E = scanner.nextInt();
 
             // Initialize graph with 0 weight for all edges
-            graph = new int[V][V];
+            this.graph = new int[V][V];
 
             // Read edges
             for (int i = 0; i < E; i++) {
                 int source = scanner.nextInt();
                 int destination = scanner.nextInt();
                 int weight = scanner.nextInt();
-
                 // Update graph with edge weight
-                graph[source][destination] = weight;
-            }
+                this.graph[source][destination] = weight;
 
+            }
             scanner.close();
 
+
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            throw new RuntimeException();
         }
-
-
     }
     @Override
     public int size() {
-        return graph.length;
+        return this.graph.length;
     }
 
     @Override
