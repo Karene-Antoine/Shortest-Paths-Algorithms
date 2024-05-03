@@ -33,8 +33,10 @@ public class GraphAlgorithms implements IGraphAlg{
             int V = scanner.nextInt();
             int E = scanner.nextInt();
 
-            // Initialize graph with 0 weight for all edges
-            graph = new int[V][V];
+            // Initialize graph with IntegeR.max_value weight for all edges
+            graph = new int[V][V];'
+            for(int i=0 ; i<V ; i++)
+                Arrays.fill(graph[i] , Integer.MAX_VALUE) ;
 
             // Read edges
             for (int i = 0; i < E; i++) {
