@@ -1,10 +1,20 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
+import java.util.PriorityQueue;
 import java.util.Scanner;
 
 public class GraphAlgorithms implements IGraphAlg{
     private String filePath;
+    private class Node {
+        int vertex;
+        int cost;
+
+        public Node(int vertex, int cost) {
+            this.vertex = vertex;
+            this.cost = cost;
+        }
+    }
 
 
 //    public int[][] getGraph() {
@@ -58,8 +68,32 @@ public class GraphAlgorithms implements IGraphAlg{
 
     @Override
     public void dijkestra(int source, int[] cost, int[] parent) {
+        boolean[] visited = new boolean[graph.length];
+        Arrays.fill(cost, Integer.MAX_VALUE);
+        cost[source] = 0;
+        PriorityQueue<Node> pq = new PriorityQueue<>((a, b) -> a.cost - b.cost);
+        pq.add(new Node(source, 0));
+        while (!pq.isEmpty()) {
+            Node node = pq.poll();
+            int u = node.vertex;
+            visited[u] = true;
+            if (cost[u] < node.cost) {
+                continue;
+            }
+            for (int v = 0; v < graph[u].length; v++) {
+                if (graph[u][v] != 0 && !visited[v]) {
+                    int newCost = cost[u] + graph[u][v];
+                    if (newCost < cost[v]) {
+                        cost[v] = newCost;
+                        parent[v] = u;
+                        pq.add(new Node(v, newCost));
+                    }
+                }
+            }
+        }
 
     }
+
 
     @Override
     public boolean bellmanFord(int source, int[] cost, int[] parent) {
@@ -94,4 +128,8 @@ public class GraphAlgorithms implements IGraphAlg{
     public boolean floydWarshall(int[][] cost, int[][] predecessor) {
         return false;
     }
+
+
+
+
 }
