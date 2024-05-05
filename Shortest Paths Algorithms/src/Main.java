@@ -1,3 +1,4 @@
+package org.example;
 import java.util.*;
 
 public class Main {
@@ -34,6 +35,21 @@ public class Main {
                     /*
                         create object and arrays
                     */
+                        int [] cost = new int [graph_algorithms.size()] ;
+                        int [] parent = new int [graph_algorithms.size()] ;
+
+                        if(algo==1){
+                            graph_algorithms.dijkestra(src , cost , parent);
+                        }
+                        else if(algo==2){
+                            graph_algorithms.bellmanFord(src , cost , parent) ;
+                        } else if (algo==3) {
+                            int [][] costs = new int [graph_algorithms.size()][graph_algorithms.size()] ;
+                            int [][] predecessor = new int [graph_algorithms.size()][graph_algorithms.size()] ;
+                            graph_algorithms.floydWarshall(costs , predecessor) ;
+                            cost = costs[src] ;
+                            parent = predecessor[src] ;
+                        }
                         while(true){
                             System.out.println("The required operation is: 1.the path cost to a node.");
                             System.out.println("                           2.the path itself to a node.");
@@ -50,7 +66,11 @@ public class Main {
                                 /*
                                 display cost
                                  */
-                                System.out.println("The cost is 0") ;
+                                int COST = graph_algorithms.cost(cost , dst) ;
+                                if(COST == Integer.MAX_VALUE)
+                                    System.out.println("The cost = INFINITY .") ;
+                                else
+                                    System.out.println("The cost = "+COST + ".");
                                 System.out.println("---------------------") ;
                             }
 
@@ -60,7 +80,7 @@ public class Main {
                                 /*
                                 display path
                                  */
-                                System.out.println("The path is 0123456") ;
+                                System.out.println(graph_algorithms.get_path(parent , cost , src , dst)) ;
                                 System.out.println("-----------------------------") ;
                             }
                             else{
@@ -92,6 +112,17 @@ public class Main {
                     /*
                         create object and arrays
                     */
+                        int[][] cost = new int [graph_algorithms.size()][graph_algorithms.size()] ;
+                        int[][] parent = new int[graph_algorithms.size()][graph_algorithms.size()] ;
+                        if(algo==1){
+                            graph_algorithms.cost_between_allpairs_with_dijkestra(cost , parent);
+                        }
+                        else if(algo==2){
+                            graph_algorithms.cost_between_all_pairs_with_bellman(cost , parent) ;
+                        }
+                        else if(algo==3){
+                            graph_algorithms.floydWarshall(cost , parent) ;
+                        }
                         while(true){
                             System.out.println("The required operation is: 1.the path cost to a node.");
                             System.out.println("                           2.the path itself to a node.");
@@ -110,7 +141,11 @@ public class Main {
                                 /*
                                 display cost
                                  */
-                                System.out.println("The cost is 0") ;
+                                int COST = graph_algorithms.cost_from_source( cost , source , destination) ;
+                                if(COST == Integer.MAX_VALUE)
+                                    System.out.println("The cost = INFINITY .") ;
+                                else
+                                    System.out.println("The cost = "+COST + ".");
                                 System.out.println("-------------------") ;
                             }
 
@@ -122,7 +157,7 @@ public class Main {
                                 /*
                                 display path
                                  */
-                                System.out.println("The path is 0123456") ;
+                                System.out.println(graph_algorithms.get_path_from_source(parent,cost ,source,destination)) ;
                                 System.out.println("---------------------------") ;
                             }
                             else{
@@ -157,7 +192,19 @@ public class Main {
                         /*
                         perform operation
                          */
-                        System.out.println("there is or there is not negative cycle") ;
+                        boolean negative_cycle ;
+                        int [][] cost = new int[graph_algorithms.size()][graph_algorithms.size()];
+                        int [][] parent = new int[graph_algorithms.size()][graph_algorithms.size()];
+                        if(algo==1){
+                            negative_cycle = graph_algorithms.cost_between_all_pairs_with_bellman(cost,parent) ;
+                        }
+                        else{
+                            negative_cycle = graph_algorithms.floydWarshall(cost , parent) ;
+                        }
+                        if(negative_cycle)
+                            System.out.println("there isn\'t a negative cycle in the graph") ;
+                        else
+                            System.out.println("there is a negative cycle in the graph") ;
                         System.out.println() ;
                         break ;
                     }
@@ -207,38 +254,5 @@ public class Main {
             m.main(args) ;
         }
 
-
-
-//        System.out.println("Enter the file path: ");
-//        Scanner scanner = new Scanner(System.in);
-//        String filePath = scanner.nextLine();
-//        GraphAlgorithms graphAlgorithms = new GraphAlgorithms(filePath);
-//        graphAlgorithms.readGraph();
-//        int[] cost = new int[graphAlgorithms.size()];
-//        int[] parent = new int[graphAlgorithms.size()];
-//        Dijksta dj = new Dijksta(cost,parent, graphAlgorithms.graph);
-//
-//
-//        ArrayList<ArrayList<ArrayList<Integer>>> paths = dj.pathsBetweenAllPairs();
-//        for (int i = 0; i < paths.size(); i++) {
-//            ArrayList<ArrayList<Integer>> inner_paths = paths.get(i);
-//            for (int j = 0; j < inner_paths.size(); j++) {
-//                ArrayList<Integer> path = inner_paths.get(j);
-//                System.out.print("Path from " + i + " to " + j + ": ");
-//                for (int k = 0; k < path.size(); k++) {
-//                    System.out.print(path.get(k));
-//                    if (k < path.size() - 1) {
-//                        System.out.print(" -> ");
-//                    }
-//                }
-//                System.out.println();
-//            }
-//
-//        }
-
-//        System.out.println(graphAlgorithms.bellmanFord(0, cost, parent));
-//        for (int i = 0; i < graphAlgorithms.size(); i++) {
-//            System.out.println("Cost to reach " + i + " is " + cost[i]);
-//         }
     }
 }
