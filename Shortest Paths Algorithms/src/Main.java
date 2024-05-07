@@ -1,4 +1,3 @@
-package org.example;
 import java.io.FileNotFoundException;
 import java.util.*;
 
