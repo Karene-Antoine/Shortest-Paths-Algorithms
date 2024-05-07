@@ -20,4 +20,18 @@ class GraphAlgorithmsTest {
     void emptyFile() {
         assertThrows(IOException.class, () -> new GraphAlgorithms("C:\\Users\\Lenovo\\Desktop\\Shortest-Paths-Algorithms\\empty.txt"));
     }
+    @Test
+    void testSize() throws IOException {
+        GraphAlgorithms graph = new GraphAlgorithms("C:\\Users\\Lenovo\\Desktop\\Shortest-Paths-Algorithms\\empty_graph.txt");
+        assertEquals(0, graph.size());
+        graph = new GraphAlgorithms("C:\\Users\\Lenovo\\Desktop\\Shortest-Paths-Algorithms\\size_test.txt");
+        assertEquals(5, graph.size());
+    }
+
+
+
+
+
+
+
 }
