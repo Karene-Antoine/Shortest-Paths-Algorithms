@@ -11,15 +11,18 @@ public class GraphAlgorithms implements IGraphAlg{
     private String filePath;
     private int[][] graph;
     private int[][] edges ;
-    public GraphAlgorithms(String filePath) throws FileNotFoundException{
+    public GraphAlgorithms(String filePath) throws IOException {
         this.filePath = filePath;
         this.readGraph();
     }
 
-    private void readGraph() throws FileNotFoundException{
+    private void readGraph() throws IOException {
         // Read the graph from the file
         File file = new File(this.filePath);
         Scanner scanner = new Scanner(file);
+        // throws empty file exception
+        if(!scanner.hasNextLine())
+            throw new IOException() ;
 
         // Read number of vertices and edges
         int V = scanner.nextInt();

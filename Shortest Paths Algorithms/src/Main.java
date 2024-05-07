@@ -1,4 +1,5 @@
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 
 public class Main {
@@ -252,7 +253,7 @@ public class Main {
             GraphAlgorithms graph_algorithms = new GraphAlgorithms(path) ;
             m.menu(args , graph_algorithms) ;
         }
-        catch (FileNotFoundException e){
+        catch (IOException e){
             m.main(args) ;
         }
 
