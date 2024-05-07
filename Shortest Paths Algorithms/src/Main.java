@@ -1,35 +1,38 @@
 package org.example;
+import java.io.FileNotFoundException;
 import java.util.*;
 
 public class Main {
 
+    public static final String ANSI_RED = "\u001B[31m" ;
+    public static final String ANSI_RESET = "\u001B[34m" ;
     public void menu (String[] args , GraphAlgorithms graph_algorithms) {
         Main m = new Main() ;
         Scanner input = new Scanner (System.in) ;
-        System.out.println("choose the operation you would to perform on graph");
-        System.out.println("--------------------------------------------------------") ;
-        System.out.println("1.Finding the shortest paths from source node to all other nodes.");
-        System.out.println("2.Finding the shortest paths between all pairs of nodes.");
-        System.out.println("3.Check if the graph contains a negative cycle.");
-        System.out.println("4.Back.");
-        System.out.println("5.Exit");
-        System.out.println("-----------") ;
-        System.out.print("Your choice is: ");
+        System.out.println(ANSI_RESET + "choose the operation you would to perform on graph");
+        System.out.println(ANSI_RESET + "--------------------------------------------------------") ;
+        System.out.println(ANSI_RESET + "1.Finding the shortest paths from source node to all other nodes.");
+        System.out.println(ANSI_RESET + "2.Finding the shortest paths between all pairs of nodes.");
+        System.out.println(ANSI_RESET + "3.Check if the graph contains a negative cycle.");
+        System.out.println(ANSI_RESET + "4.Back.");
+        System.out.println(ANSI_RESET + "5.Exit");
+        System.out.println(ANSI_RESET + "-----------") ;
+        System.out.print(ANSI_RESET + "Your choice is: ");
         int choice = input.nextInt() ;
 
 
         switch (choice)
         {
             case 1:
-                System.out.println("--------------------") ;
-                System.out.print("The source node is: ") ;
+                System.out.println(ANSI_RESET + "--------------------") ;
+                System.out.print(ANSI_RESET + "The source node is: ") ;
                 int src = input.nextInt() ;
                 while(true){
-                    System.out.println("The choices is : 1.Dijkstra Algorithm.");
-                    System.out.println("                 2.Bellman-Ford Algorithm.");
-                    System.out.println("                 3.Floyd-Warshall Algorithm.");
-                    System.out.println("                 4.Back to main menu.");
-                    System.out.print("Your choice is : ") ;
+                    System.out.println(ANSI_RESET + "The choices is : 1.Dijkstra Algorithm.");
+                    System.out.println(ANSI_RESET + "                 2.Bellman-Ford Algorithm.");
+                    System.out.println(ANSI_RESET + "                 3.Floyd-Warshall Algorithm.");
+                    System.out.println(ANSI_RESET + "                 4.Back to main menu.");
+                    System.out.print(ANSI_RESET + "Your choice is : ") ;
                     int algo = input.nextInt() ;
                     if(algo ==1 || algo ==2 || algo==3){
                     /*
@@ -51,62 +54,62 @@ public class Main {
                             parent = predecessor[src] ;
                         }
                         while(true){
-                            System.out.println("The required operation is: 1.the path cost to a node.");
-                            System.out.println("                           2.the path itself to a node.");
-                            System.out.println("                           3.Back.");
-                            System.out.print("Your choice is : ");
+                            System.out.println(ANSI_RESET + "The required operation is: 1.the path cost to a node.");
+                            System.out.println(ANSI_RESET + "                           2.the path itself to a node.");
+                            System.out.println(ANSI_RESET + "                           3.Back.");
+                            System.out.print(ANSI_RESET + "Your choice is : ");
                             int x = input.nextInt() ;
 
                             if(x == 3)
                                 break ;
 
                             else if(x==1){
-                                System.out.print("The destination node is: ") ;
+                                System.out.print(ANSI_RESET + "The destination node is: ") ;
                                 int dst = input.nextInt() ;
                                 /*
                                 display cost
                                  */
                                 int COST = graph_algorithms.cost(cost , dst) ;
                                 if(COST == Integer.MAX_VALUE)
-                                    System.out.println("The cost = INFINITY .") ;
+                                    System.out.println(ANSI_RED+ "The cost = INFINITY .") ;
                                 else
-                                    System.out.println("The cost = "+COST + ".");
-                                System.out.println("---------------------") ;
+                                    System.out.println(ANSI_RED + "The cost = "+COST + ".");
+                                System.out.println(ANSI_RESET + "---------------------") ;
                             }
 
                             else if(x==2){
-                                System.out.print("The destination node is: ") ;
+                                System.out.print(ANSI_RESET + "The destination node is: ") ;
                                 int dst = input.nextInt() ;
                                 /*
                                 display path
                                  */
-                                System.out.println(graph_algorithms.get_path(parent , cost , src , dst)) ;
-                                System.out.println("-----------------------------") ;
+                                System.out.println(ANSI_RED+ graph_algorithms.get_path(parent , cost , src , dst)) ;
+                                System.out.println(ANSI_RESET + "-----------------------------") ;
                             }
                             else{
-                                System.out.println("Un defined choice");
-                                System.out.println("---------------------") ;
+                                System.out.println(ANSI_RESET + "Un defined choice");
+                                System.out.println(ANSI_RESET + "---------------------") ;
                             }
                         }
                     }
                     else if(algo == 4)
                         break ;
                     else {
-                        System.out.println("Un defined choice");
-                        System.out.println("---------------------") ;
+                        System.out.println(ANSI_RESET + "Un defined choice");
+                        System.out.println(ANSI_RESET + "---------------------") ;
                     }
                 }
                 menu(args , graph_algorithms);
                 break;
 
             case 2:
-                System.out.println("--------------------") ;
+                System.out.println(ANSI_RESET + "--------------------") ;
                 while(true){
-                    System.out.println("The choices is : 1.Dijkstra Algorithm.");
-                    System.out.println("                 2.Bellman-Ford Algorithm.");
-                    System.out.println("                 3.Floyd-Warshall Algorithm.");
-                    System.out.println("                 4.Back to main menu.");
-                    System.out.print("Your choice is : ") ;
+                    System.out.println(ANSI_RESET + "The choices is : 1.Dijkstra Algorithm.");
+                    System.out.println(ANSI_RESET + "                 2.Bellman-Ford Algorithm.");
+                    System.out.println(ANSI_RESET + "                 3.Floyd-Warshall Algorithm.");
+                    System.out.println(ANSI_RESET + "                 4.Back to main menu.");
+                    System.out.print(ANSI_RESET + "Your choice is : ") ;
                     int algo = input.nextInt() ;
                     if(algo ==1 || algo ==2 || algo==3){
                     /*
@@ -124,53 +127,53 @@ public class Main {
                             graph_algorithms.floydWarshall(cost , parent) ;
                         }
                         while(true){
-                            System.out.println("The required operation is: 1.the path cost to a node.");
-                            System.out.println("                           2.the path itself to a node.");
-                            System.out.println("                           3.Back.");
-                            System.out.print("Your choice is : ");
+                            System.out.println(ANSI_RESET + "The required operation is: 1.the path cost to a node.");
+                            System.out.println(ANSI_RESET + "                           2.the path itself to a node.");
+                            System.out.println(ANSI_RESET + "                           3.Back.");
+                            System.out.print(ANSI_RESET + "Your choice is : ");
                             int x = input.nextInt() ;
 
                             if(x == 3)
                                 break ;
 
                             else if(x==1){
-                                System.out.print("The source node is: ") ;
+                                System.out.print(ANSI_RESET + "The source node is: ") ;
                                 int source = input.nextInt() ;
-                                System.out.print("The destination node is: ") ;
+                                System.out.print(ANSI_RESET + "The destination node is: ") ;
                                 int destination = input.nextInt() ;
                                 /*
                                 display cost
                                  */
                                 int COST = graph_algorithms.cost_from_source( cost , source , destination) ;
                                 if(COST == Integer.MAX_VALUE)
-                                    System.out.println("The cost = INFINITY .") ;
+                                    System.out.println(ANSI_RED + "The cost = INFINITY .") ;
                                 else
-                                    System.out.println("The cost = "+COST + ".");
-                                System.out.println("-------------------") ;
+                                    System.out.println(ANSI_RED + "The cost = "+COST + ".");
+                                System.out.println(ANSI_RESET + "-------------------") ;
                             }
 
                             else if(x==2){
-                                System.out.print("The source node is: ") ;
+                                System.out.print(ANSI_RESET + "The source node is: ") ;
                                 int source = input.nextInt() ;
-                                System.out.print("The destination node is: ") ;
+                                System.out.print(ANSI_RESET + "The destination node is: ") ;
                                 int destination = input.nextInt() ;
                                 /*
                                 display path
                                  */
-                                System.out.println(graph_algorithms.get_path_from_source(parent,cost ,source,destination)) ;
-                                System.out.println("---------------------------") ;
+                                System.out.println(ANSI_RED + graph_algorithms.get_path_from_source(parent,cost ,source,destination)) ;
+                                System.out.println(ANSI_RESET + "---------------------------") ;
                             }
                             else{
-                                System.out.println("Un defined choice");
-                                System.out.println("---------------------") ;
+                                System.out.println(ANSI_RESET + "Un defined choice");
+                                System.out.println(ANSI_RESET + "---------------------") ;
                             }
                         }
                     }
                     else if(algo == 4)
                         break ;
                     else{
-                        System.out.println("Un defined choice");
-                        System.out.println("---------------------") ;
+                        System.out.println(ANSI_RESET + "Un defined choice");
+                        System.out.println(ANSI_RESET + "---------------------") ;
                     }
                 }
                 menu(args , graph_algorithms);
@@ -178,10 +181,10 @@ public class Main {
 
             case 3:
                 while(true) {
-                    System.out.println("The choices is : 1.Bellman-Ford Algorithm.");
-                    System.out.println("                 2.Floyd-Warshall Algorithm");
-                    System.out.println("                 3.Back to main menu.");
-                    System.out.print("Your choice is : ") ;
+                    System.out.println(ANSI_RESET + "The choices is : 1.Bellman-Ford Algorithm.");
+                    System.out.println(ANSI_RESET + "                 2.Floyd-Warshall Algorithm");
+                    System.out.println(ANSI_RESET + "                 3.Back to main menu.");
+                    System.out.print(ANSI_RESET + "Your choice is : ") ;
                     int algo = input.nextInt() ;
                     /*
                     if(algo ==1 || algo ==2)
@@ -202,17 +205,17 @@ public class Main {
                             negative_cycle = graph_algorithms.floydWarshall(cost , parent) ;
                         }
                         if(negative_cycle)
-                            System.out.println("there isn\'t a negative cycle in the graph") ;
+                            System.out.println(ANSI_RED+ "there isn\'t a negative cycle in the graph") ;
                         else
-                            System.out.println("there is a negative cycle in the graph") ;
+                            System.out.println(ANSI_RED + "there is a negative cycle in the graph") ;
                         System.out.println() ;
                         break ;
                     }
                     else if(algo == 3)
                         break ;
                     else {
-                        System.out.println("Un defined choice");
-                        System.out.println("---------------------") ;
+                        System.out.println(ANSI_RESET + "Un defined choice");
+                        System.out.println(ANSI_RESET + "---------------------") ;
                     }
                 }
                 menu(args , graph_algorithms) ;
@@ -222,7 +225,7 @@ public class Main {
                 /*
                 reread file
                  */
-                System.out.println("-----------------------------------------------------------------------------------") ;
+                System.out.println(ANSI_RESET + "-----------------------------------------------------------------------------------") ;
                 m.main(args) ;
                 break ;
 
@@ -231,15 +234,15 @@ public class Main {
                 break ;
 
             default:
-                System.out.println("Un defined operation") ;
-                System.out.println("-------------------------") ;
+                System.out.println(ANSI_RESET + "Un defined operation") ;
+                System.out.println(ANSI_RESET + "-------------------------") ;
                 menu(args , graph_algorithms) ;
         }
     }
     public static void main(String[] args) {
         Main m = new Main() ;
         Scanner input = new Scanner (System.in) ;
-        System.out.print("Enter the path of the file : ");
+        System.out.print(ANSI_RESET + "Enter the path of the file : ");
         String path = input.nextLine() ;
         /*
             create object of graph
@@ -250,7 +253,7 @@ public class Main {
             GraphAlgorithms graph_algorithms = new GraphAlgorithms(path) ;
             m.menu(args , graph_algorithms) ;
         }
-        catch (RuntimeException e){
+        catch (FileNotFoundException e){
             m.main(args) ;
         }
 
