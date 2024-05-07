@@ -1,8 +1,6 @@
-package org.example;
-
-
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.* ;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.PriorityQueue;
@@ -13,48 +11,44 @@ public class GraphAlgorithms implements IGraphAlg{
     private String filePath;
     private int[][] graph;
     private int[][] edges ;
-    public GraphAlgorithms(String filePath){
+    public GraphAlgorithms(String filePath) throws FileNotFoundException{
         this.filePath = filePath;
         this.readGraph();
     }
 
-    private void readGraph(){
+    private void readGraph() throws FileNotFoundException{
         // Read the graph from the file
-        try {
-            File file = new File(this.filePath);
-            Scanner scanner = new Scanner(file);
+        File file = new File(this.filePath);
+        Scanner scanner = new Scanner(file);
 
-            // Read number of vertices and edges
-            int V = scanner.nextInt();
-            int E = scanner.nextInt();
+        // Read number of vertices and edges
+        int V = scanner.nextInt();
+        int E = scanner.nextInt();
 
-            // Initialize graph with Integer.MAX_VALUE weight for all edges except diagonal
-            this.graph = new int[V][V];
-            for(int i=0 ; i<V ; i++){
-                for(int j=0 ; j<V ; j++){
-                    if(i!=j)
-                        graph[i][j] = Integer.MAX_VALUE ;
-                }
+        // Initialize graph with Integer.MAX_VALUE weight for all edges except diagonal
+        this.graph = new int[V][V];
+        for(int i=0 ; i<V ; i++){
+            for(int j=0 ; j<V ; j++){
+                if(i!=j)
+                    graph[i][j] = Integer.MAX_VALUE ;
             }
-
-            this.edges = new int[E][3] ;
-
-            // Read edges
-            for (int i = 0; i < E; i++) {
-                int source = scanner.nextInt();
-                int destination = scanner.nextInt();
-                int weight = scanner.nextInt();
-                // Update graph with edge weight
-                this.graph[source][destination] = weight;
-                this.edges[i][0] = source ;
-                this.edges[i][1] = destination ;
-                this.edges[i][2] = weight ;
-
-            }
-            scanner.close();
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException();
         }
+
+        this.edges = new int[E][3] ;
+
+        // Read edges
+        for (int i = 0; i < E; i++) {
+            int source = scanner.nextInt();
+            int destination = scanner.nextInt();
+            int weight = scanner.nextInt();
+            // Update graph with edge weight
+            this.graph[source][destination] = weight;
+            this.edges[i][0] = source ;
+            this.edges[i][1] = destination ;
+            this.edges[i][2] = weight ;
+
+        }
+        scanner.close();
     }
 
     @Override
@@ -150,13 +144,18 @@ public class GraphAlgorithms implements IGraphAlg{
     }
     @Override
     public boolean floydWarshall(int[][] cost, int[][] predecessor) {
+        //copy graph array into cost array
         for(int i=0 ; i<this.size() ; i++)
             System.arraycopy(this.graph[i] , 0 , cost[i] , 0 , this.size()) ;
 
-//        for(int i=0 ; i<this.size() ; i++){
-//            Arrays.fill(parent[i] , -1);
-//            parent[i][i] = i ;
-//        }
+        // initially all predecessor are -1(null) except diagonal and edges that is existed already
+        for(int i=0 ; i<this.size() ; i++){
+            Arrays.fill(predecessor[i] , -1);
+            predecessor[i][i] = i ;
+        }
+        for(int i=0 ; i<this.edges.length ; i++){
+            predecessor[this.edges[i][0]][this.edges[i][1]] = this.edges[i][0] ;
+        }
 
 
         for(int k=0 ; k<this.size() ; k++) {
@@ -166,8 +165,7 @@ public class GraphAlgorithms implements IGraphAlg{
                     if(temp[i][k] != Integer.MAX_VALUE && temp[k][j] != Integer.MAX_VALUE) {
                         if (temp[i][j] > temp[i][k] + temp[k][j]) {
                             cost[i][j] = temp[i][k] + temp[k][j];
-                            //parent[k][j] = k;
-                            //parent[i][k] = i;
+                            predecessor[i][j] = predecessor[k][j] ;
                         }
                     }
                 }
@@ -218,18 +216,4 @@ public class GraphAlgorithms implements IGraphAlg{
     public String get_path_from_source (int[][] parent , int[][] cost , int source , int destination){
         return get_path(parent[source] , cost[source] , source , destination) ;
     }
-
-//    public static void main(String[] args) {
-//        GraphAlgorithms graph_algorithms = new GraphAlgorithms("D:/KOLYA/Term4/Data Structure/Labs/Shortest-Paths-Algorithms/negative cycle.txt") ;
-//        int [][] cost = new int [graph_algorithms.size()][graph_algorithms.size()];
-//        int [][] parent = new int [graph_algorithms.size()][graph_algorithms.size()];
-//        graph_algorithms.floydWarshall( cost , parent) ;
-//        for(int i=0 ; i< graph_algorithms.size() ; i++){
-//            for (int j=0 ; j<graph_algorithms.size() ; j++){
-//                System.out.println("cost from " +i + " to "+j +" = "+cost[i][j]) ;
-//                System.out.println("parent = " +parent[i][j]);
-//            }
-//        }
-//
-//    }
 }
