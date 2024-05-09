@@ -16,7 +16,9 @@ class GraphAlgorithmsTest {
     static int maxWeight = 100; // maximum weight of each edge
     static int samples = 10;
     static int vertices = 100;
-    static double density = 0.2;
+
+    static int edges = 10;
+    static double density =  edges / (double) (vertices * (vertices - 1));
     static long totalTimeDijkestra = 0;
     static long totalTimeBellmanFord = 0;
     static long totalTimeFloydWarshall = 0;
@@ -30,7 +32,7 @@ class GraphAlgorithmsTest {
         edges = (int) (density * vertices * (vertices - 1));
 
         return Stream.generate(() -> {
-            int[][] graph = new int[edges][3];
+            int[][] graph = new int[edges + 3][3];
             for (int i = 0; i < edges; i++) {
                 graph[i][0] = rand.nextInt(vertices);
                 graph[i][1] = rand.nextInt(vertices);
@@ -39,6 +41,11 @@ class GraphAlgorithmsTest {
                 }
                 graph[i][2] = rand.nextInt(maxWeight) + 1;
             }
+            // ensure the shortest path from 0 to 5
+            graph[edges+0][0] = 0; graph[edges+0][1] = 2;graph[edges+0][2] = 0;
+            graph[edges+1][0] = 2; graph[edges+1][1] = 7;graph[edges+1][2] = 0;
+            graph[edges+2][0] = 7; graph[edges+2][1] = 5;graph[edges+2][2] = 0;
+
             return graph;
         }).limit(samples); // generate 10 graphs
     }
@@ -71,6 +78,7 @@ class GraphAlgorithmsTest {
             graphAlgorithms.dijkestra(0, cost, parent);
             graphAlgorithms.cost( cost, vertices/2);
             long endTime = System.nanoTime();
+            assertEquals("The path is 0 -> 2 -> 7 -> 5.", graphAlgorithms.get_path(parent, cost, 0, 5));
 
             long duration = endTime - startTime;
             totalTimeDijkestra += duration;
@@ -83,6 +91,7 @@ class GraphAlgorithmsTest {
             graphAlgorithms.bellmanFord(0, cost, parent);
             graphAlgorithms.cost( cost, vertices/2);
             endTime = System.nanoTime();
+            assertEquals("The path is 0 -> 2 -> 7 -> 5.", graphAlgorithms.get_path(parent, cost, 0, 5));
 
             duration = endTime - startTime;
             totalTimeBellmanFord += duration;
@@ -94,6 +103,7 @@ class GraphAlgorithmsTest {
             graphAlgorithms.floydWarshall(costMatrix, predecessor);
             graphAlgorithms.cost_from_source(costMatrix, 0, vertices/2);
             endTime = System.nanoTime();
+            assertEquals("The path is 0 -> 2 -> 7 -> 5.", graphAlgorithms.get_path_from_source(predecessor, costMatrix, 0, 5));
 
             duration = endTime - startTime;
             totalTimeFloydWarshall += duration;
@@ -138,6 +148,8 @@ class GraphAlgorithmsTest {
 
             long duration = endTime - startTime;
             totalTimeDijkestraAllPair += duration;
+            assertEquals("The path is 0 -> 2 -> 7 -> 5.", graphAlgorithms.get_path_from_source(predecessor, costMatrix, 0, 5));
+
 
             costMatrix = new int [graphAlgorithms.size()][graphAlgorithms.size()] ;
             predecessor = new int [graphAlgorithms.size()][graphAlgorithms.size()] ;
@@ -149,6 +161,8 @@ class GraphAlgorithmsTest {
 
             duration = endTime - startTime;
             totalTimeBellmanFordAllPair += duration;
+            assertEquals("The path is 0 -> 2 -> 7 -> 5.", graphAlgorithms.get_path_from_source(predecessor, costMatrix, 0, 5));
+
 
             // test FloydWarshall
             costMatrix = new int [graphAlgorithms.size()][graphAlgorithms.size()] ;
@@ -159,6 +173,7 @@ class GraphAlgorithmsTest {
 
             duration = endTime - startTime;
             totalTimeFloydWarshallAllPair += duration;
+            assertEquals("The path is 0 -> 2 -> 7 -> 5.", graphAlgorithms.get_path_from_source(predecessor, costMatrix, 0, 5));
 
 
 
@@ -170,7 +185,7 @@ class GraphAlgorithmsTest {
     }
     @AfterAll
     public static void printResults() {
-        System.out.print("At V= " + vertices + ", density= "+ density + ", i.e " + format(density, vertices) + " :\n");
+        System.out.print("At V= " + vertices + ", E= " + edges + ", density= "+ String.format("%.3f", density) + ", i.e " + format(density, vertices) + " :\n");
         System.out.println("Single Source Dijkstra took on average:  " + format(totalTimeDijkestra / samples));
         System.out.println("Single Source Bellman-Ford took on average:  " + format(totalTimeBellmanFord / samples));
         System.out.println("Single Source Floyd-Warshall took on average:  " + format(totalTimeFloydWarshall / samples));
