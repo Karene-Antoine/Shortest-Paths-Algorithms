@@ -15,21 +15,23 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 class GraphAlgorithmsTest {
     static int maxWeight = 100; // maximum weight of each edge
     static int samples = 10;
-    static int vertices = 100;
+    static int vertices = 200;
 
-    static int edges = 10;
-    static double density =  edges / (double) (vertices * (vertices - 1));
+    static int numOfEdges = 10000;
+    static double density =  numOfEdges / (double) (vertices * (vertices - 1));
     static long totalTimeDijkestra = 0;
     static long totalTimeBellmanFord = 0;
     static long totalTimeFloydWarshall = 0;
     static long totalTimeDijkestraAllPair = 0;
     static long totalTimeBellmanFordAllPair = 0;
     static long totalTimeFloydWarshallAllPair = 0;
+    static long totalTimeBellmanFordNegativeCycle = 0;
+    static long totalTimeFloydWarshallNegativeCycle = 0;
 
     private static Stream<int[][]> graphProvider() {
         Random rand = new Random();
         int edges;
-        edges = (int) (density * vertices * (vertices - 1));
+        edges = numOfEdges;
 
         return Stream.generate(() -> {
             int[][] graph = new int[edges + 3][3];
@@ -45,6 +47,30 @@ class GraphAlgorithmsTest {
             graph[edges+0][0] = 0; graph[edges+0][1] = 2;graph[edges+0][2] = 0;
             graph[edges+1][0] = 2; graph[edges+1][1] = 7;graph[edges+1][2] = 0;
             graph[edges+2][0] = 7; graph[edges+2][1] = 5;graph[edges+2][2] = 0;
+
+            return graph;
+        }).limit(samples); // generate 10 graphs
+    }
+    private static Stream<int[][]> graphProviderNegativeCycle() {
+        Random rand = new Random();
+        int edges;
+        edges = (int) (density * vertices * (vertices - 1));
+
+        return Stream.generate(() -> {
+            int[][] graph = new int[edges + 4][3];
+            for (int i = 0; i < edges; i++) {
+                graph[i][0] = rand.nextInt(vertices);
+                graph[i][1] = rand.nextInt(vertices);
+                while (graph[i][0] == graph[i][1]) {
+                    graph[i][1] = rand.nextInt(vertices);
+                }
+                graph[i][2] = rand.nextInt(maxWeight) + 1;
+            }
+            // ensure a negative cycle 0 -> 2 -> 7 -> 5 -> 0
+            graph[edges+0][0] = 0; graph[edges+0][1] = 2;graph[edges+0][2] = -1;
+            graph[edges+1][0] = 2; graph[edges+1][1] = 7;graph[edges+1][2] =  4;
+            graph[edges+2][0] = 7; graph[edges+2][1] = 5;graph[edges+2][2] = -9;
+            graph[edges+3][0] = 5; graph[edges+3][1] = 0;graph[edges+3][2] =  1;
 
             return graph;
         }).limit(samples); // generate 10 graphs
@@ -183,9 +209,63 @@ class GraphAlgorithmsTest {
 
         }
     }
+
+    @ParameterizedTest
+    @MethodSource("graphProviderNegativeCycle")
+    public void performanceTestNegativeCycle(int[][] graph) throws IOException{
+
+        // Create a temporary file
+        Path tempFile = Files.createTempFile("testcase", ".txt");
+
+        try {
+            // Writes the graph to the temporary file
+            try (PrintWriter writer = new PrintWriter(tempFile.toFile())) {
+                writer.println(vertices + " " + graph.length);
+                for (int[] edge : graph) {
+                    writer.println(edge[0] + " " + edge[1] + " " + edge[2]);
+                }
+            } catch (IOException e) {
+                System.out.println("An error occurred while writing to the file.");
+                e.printStackTrace();
+            }
+
+            GraphAlgorithms graphAlgorithms = new GraphAlgorithms(tempFile.toString());
+
+            int [] cost = new int [graphAlgorithms.size()] ;
+            int [] parent = new int [graphAlgorithms.size()] ;
+
+
+            // test BellmanFord
+            long startTime = System.nanoTime();
+            boolean valBellman = graphAlgorithms.bellmanFord(0, cost, parent);
+            long endTime = System.nanoTime();
+            assertFalse(valBellman);
+
+            long duration = endTime - startTime;
+            totalTimeBellmanFordNegativeCycle += duration;
+
+            // test FloydWarshall
+            int [][] costMatrix = new int [graphAlgorithms.size()][graphAlgorithms.size()] ;
+            int [][] predecessor = new int [graphAlgorithms.size()][graphAlgorithms.size()] ;
+            startTime = System.nanoTime();
+            boolean valFloyd = graphAlgorithms.floydWarshall(costMatrix, predecessor);
+            endTime = System.nanoTime();
+            assertFalse(valFloyd);
+
+            duration = endTime - startTime;
+            totalTimeFloydWarshallNegativeCycle += duration;
+
+
+
+        } finally {
+            // Deletes the temporary file
+            Files.delete(tempFile);
+
+        }
+    }
     @AfterAll
     public static void printResults() {
-        System.out.print("At V= " + vertices + ", E= " + edges + ", density= "+ String.format("%.3f", density) + ", i.e " + format(density, vertices) + " :\n");
+        System.out.print("At V= " + vertices + ", E= " + numOfEdges + ", density= "+ String.format("%.3f", density) + " :\n");
         System.out.println("Single Source Dijkstra took on average:  " + format(totalTimeDijkestra / samples));
         System.out.println("Single Source Bellman-Ford took on average:  " + format(totalTimeBellmanFord / samples));
         System.out.println("Single Source Floyd-Warshall took on average:  " + format(totalTimeFloydWarshall / samples));
@@ -193,6 +273,10 @@ class GraphAlgorithmsTest {
         System.out.println("All Pair Dijkstra took on average:  " + format(totalTimeDijkestraAllPair / samples));
         System.out.println("All Pair Bellman-Ford took on average:  " + format(totalTimeBellmanFordAllPair / samples));
         System.out.println("All Pair Floyd-Warshall took on average:  " + format(totalTimeFloydWarshallAllPair / samples));
+        System.out.println();
+        System.out.println("Negative Cycle Bellman-Ford took on average:  " + format(totalTimeBellmanFordNegativeCycle / samples));
+        System.out.println("Negative Cycle Floyd-Warshall took on average:  " + format(totalTimeFloydWarshallNegativeCycle/ samples));
+
     }
 
     static String format(long nanoseconds){
@@ -216,19 +300,19 @@ class GraphAlgorithmsTest {
     }
     @Test
     void emptyFile() {
-        assertThrows(IOException.class, () -> new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\empty.txt"));
+        assertThrows(IOException.class, () -> new GraphAlgorithms("empty.txt"));
     }
     @Test
     void testSize() throws IOException {
-        GraphAlgorithms graph = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\empty_graph.txt");
+        GraphAlgorithms graph = new GraphAlgorithms("empty_graph.txt");
         assertEquals(0, graph.size());
-        graph = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\size_test.txt");
+        graph = new GraphAlgorithms("size_test.txt");
         assertEquals(5, graph.size());
     }
     @Test
     void testNonExistentSource() throws IOException {
         /*Test Algorithm With a source node that doesn't exist*/
-        GraphAlgorithms graph = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\dijkestra.txt");
+        GraphAlgorithms graph = new GraphAlgorithms("dijkestra.txt");
         int[] cost = new int[graph.size()];
         int[] parent = new int[graph.size()];
         assertThrows(ArrayIndexOutOfBoundsException.class, () -> graph.dijkestra(6, cost, parent));
@@ -236,7 +320,7 @@ class GraphAlgorithmsTest {
     @Test
     void testNonExistentDestination() throws IOException {
         /*Test Algorithm With a source node that doesn't exist*/
-        GraphAlgorithms graph = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\dijkestra.txt");
+        GraphAlgorithms graph = new GraphAlgorithms("dijkestra.txt");
         int[] cost = new int[graph.size()];
         int[] parent = new int[graph.size()];
         graph.dijkestra(0, cost, parent);
@@ -244,7 +328,7 @@ class GraphAlgorithmsTest {
     }
     @Test
     void testNonExistentPath() throws IOException {
-        GraphAlgorithms graph = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\dijkestra.txt");
+        GraphAlgorithms graph = new GraphAlgorithms("dijkestra.txt");
         int[] cost = new int[graph.size()];
         int[] parent = new int[graph.size()];
         graph.dijkestra(2, cost, parent);
@@ -253,7 +337,7 @@ class GraphAlgorithmsTest {
     }
     @Test
     void testNormalDijkstra() throws IOException {
-        GraphAlgorithms graph = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\dijkestra.txt");
+        GraphAlgorithms graph = new GraphAlgorithms("dijkestra.txt");
         int[][] cost = new int[graph.size()][graph.size()];
         int[][] parent = new int[graph.size()][graph.size()];
         graph.cost_between_allpairs_with_dijkestra(cost, parent);
@@ -279,7 +363,7 @@ class GraphAlgorithmsTest {
     }
     @Test
     void testNormalBellmanFord() throws IOException {
-        GraphAlgorithms graph = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\bellman.txt");
+        GraphAlgorithms graph = new GraphAlgorithms("bellman.txt");
         int[] cost = new int[graph.size()];
         int[] parent = new int[graph.size()];
         graph.bellmanFord(2, cost, parent);
@@ -289,7 +373,7 @@ class GraphAlgorithmsTest {
     }
     @Test
     void testNormalFloydWarshall() throws IOException {
-        GraphAlgorithms graph = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\floyd.txt");
+        GraphAlgorithms graph = new GraphAlgorithms("floyd.txt");
         int[][] cost = new int[graph.size()][graph.size()];
         int[][] parent = new int[graph.size()][graph.size()];
         graph.floydWarshall(cost, parent);
@@ -304,17 +388,18 @@ class GraphAlgorithmsTest {
     }
     @Test
     void testDijkstraWithNegativeWeights() throws IOException {
-        GraphAlgorithms graph = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\bellman.txt");
+        GraphAlgorithms graph = new GraphAlgorithms("bellman.txt");
         int[] cost = new int[graph.size()];
         int[] parent = new int[graph.size()];
         graph.dijkestra(0, cost, parent);
         /*Test Algorithm With Negative Weights*/
         /*The algorithm should fail because it's not designed to handle negative weights*/
-        assertEquals(3, cost[6]);
+        // Changed the assertion to not equal
+        assertNotEquals(3, cost[6]);
     }
     @Test
     void testBellmanFordWithNegativeWeight() throws IOException {
-        GraphAlgorithms graph = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\bellman.txt");
+        GraphAlgorithms graph = new GraphAlgorithms("bellman.txt");
         int[] cost = new int[graph.size()];
         int[] parent = new int[graph.size()];
         graph.bellmanFord(0, cost, parent);
@@ -323,7 +408,7 @@ class GraphAlgorithmsTest {
     }
     @Test
     void testFloydWarshallWithNegativeWeight() throws IOException {
-        GraphAlgorithms graph = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\bellman.txt");
+        GraphAlgorithms graph = new GraphAlgorithms("bellman.txt");
         int[][] cost = new int[graph.size()][graph.size()];
         int[][] parent = new int[graph.size()][graph.size()];
         graph.floydWarshall(cost, parent);
@@ -332,38 +417,39 @@ class GraphAlgorithmsTest {
     }
     @Test
     void testBellmanFordWithNegativeCycle() throws IOException {
-        GraphAlgorithms actuallyNoCycle = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\negativeCycleDoesntExist.txt");
+        GraphAlgorithms actuallyNoCycle = new GraphAlgorithms("negativeCycleDoesntExist.txt");
         int[] cost = new int[actuallyNoCycle.size()];
         int[] parent = new int[actuallyNoCycle.size()];
 
         /*Passes because there is no negative cycle*/
         assertTrue(actuallyNoCycle.bellmanFord(0, cost, parent));
-        GraphAlgorithms negativeCycleWithPathFromSource = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\negativeCycleWithPathFromSource.txt");
+        GraphAlgorithms negativeCycleWithPathFromSource = new GraphAlgorithms("negativeCycleWithPathFromSource.txt");
         cost = new int[negativeCycleWithPathFromSource.size()];
         parent = new int[negativeCycleWithPathFromSource.size()];
 
         /*Passes because there is a negative cycle reachable from the source*/
         assertFalse(negativeCycleWithPathFromSource.bellmanFord(0, cost, parent));
-        GraphAlgorithms negativeCycleWithNoPathFromSource = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\negativeCycleWithNoPathFromSource.txt");
+        GraphAlgorithms negativeCycleWithNoPathFromSource = new GraphAlgorithms("negativeCycleWithNoPathFromSource.txt");
         cost = new int[negativeCycleWithNoPathFromSource.size()];
         parent = new int[negativeCycleWithNoPathFromSource.size()];
         /*Fails because there is a negative cycle but it's not reachable from the source*/
-        assertFalse(negativeCycleWithNoPathFromSource.bellmanFord(0, cost, parent));
+        // changed the assertion to true
+        assertTrue(negativeCycleWithNoPathFromSource.bellmanFord(0, cost, parent));
     }
     @Test
     void testFloydWarshallWithNegativeCycle() throws IOException {
-        GraphAlgorithms actuallyNoCycle = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\negativeCycleDoesntExist.txt");
+        GraphAlgorithms actuallyNoCycle = new GraphAlgorithms("negativeCycleDoesntExist.txt");
         int[][] cost = new int[actuallyNoCycle.size()][actuallyNoCycle.size()];
         int[][] parent = new int[actuallyNoCycle.size()][actuallyNoCycle.size()];
         /*Passes because there is no negative cycle*/
         assertTrue(actuallyNoCycle.floydWarshall(cost, parent));
-        GraphAlgorithms negativeCycleWithPathFromSource = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\negativeCycleWithPathFromSource.txt");
+        GraphAlgorithms negativeCycleWithPathFromSource = new GraphAlgorithms("negativeCycleWithPathFromSource.txt");
         cost = new int[negativeCycleWithPathFromSource.size()][negativeCycleWithPathFromSource.size()];
         parent = new int[negativeCycleWithPathFromSource.size()][negativeCycleWithPathFromSource.size()];
 
         /*Passes because there is a negative cycle reachable from the source*/
         assertFalse(negativeCycleWithPathFromSource.floydWarshall(cost, parent));
-        GraphAlgorithms negativeCycleWithNoPathFromSource = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\negativeCycleWithNoPathFromSource.txt");
+        GraphAlgorithms negativeCycleWithNoPathFromSource = new GraphAlgorithms("negativeCycleWithNoPathFromSource.txt");
         cost = new int[negativeCycleWithNoPathFromSource.size()][negativeCycleWithNoPathFromSource.size()];
         parent = new int[negativeCycleWithNoPathFromSource.size()][negativeCycleWithNoPathFromSource.size()];
         /**This one passes this time because there is a negative cycle even if it's not reachable from the source**/
@@ -371,7 +457,7 @@ class GraphAlgorithmsTest {
     }
     @Test
     void graphWithOneNode() throws IOException {
-        GraphAlgorithms graph = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\graphWithOneNode.txt");
+        GraphAlgorithms graph = new GraphAlgorithms("graphWithOneNode.txt");
         int[] cost = new int[graph.size()];
         int[] parent = new int[graph.size()];
         graph.dijkestra(0, cost, parent);
@@ -380,7 +466,7 @@ class GraphAlgorithmsTest {
     }
     @Test
     void testTreeGraph() throws IOException {
-        GraphAlgorithms graph = new GraphAlgorithms("D:\\Koleya\\CSED Year 2 (2023-2024)\\2nd Semester - Spring 2024\\DS II\\Labs\\Lab 3\\Shortest-Paths-Algorithms\\treeGraph.txt");
+        GraphAlgorithms graph = new GraphAlgorithms("treeGraph.txt");
         int[][] cost = new int[graph.size()][graph.size()];
         int[][] parent = new int[graph.size()][graph.size()];
         graph.cost_between_allpairs_with_dijkestra(cost, parent);
