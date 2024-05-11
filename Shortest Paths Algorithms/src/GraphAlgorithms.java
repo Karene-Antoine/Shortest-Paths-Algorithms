@@ -145,6 +145,22 @@ public class GraphAlgorithms implements IGraphAlg{
             negative_cycle = negative_cycle && bellmanFord(i , cost[i] , parent[i]);
         return negative_cycle ;
     }
+
+    public boolean contains_negative_cycle_with_bellman(int [] cost, int [] parent){
+        boolean [] visited = new boolean[this.size()] ;
+        Arrays.fill(visited , false) ;
+        for(int i=0; i<this.size() ; i++){
+            if(!visited[i]){
+                if(!bellmanFord(i , cost , parent))
+                    return true ;
+                for(int j=0 ; j<this.size() ; j++){
+                    if(parent[j] != -1)
+                        visited[j] = true ;
+                }
+            }
+        }
+        return false ;
+    }
     @Override
     public boolean floydWarshall(int[][] cost, int[][] predecessor) {
         //copy graph array into cost array
@@ -219,4 +235,20 @@ public class GraphAlgorithms implements IGraphAlg{
     public String get_path_from_source (int[][] parent , int[][] cost , int source , int destination){
         return get_path(parent[source] , cost[source] , source , destination) ;
     }
+
+    public static void main(String[] args){
+        //test negative cycle in bellman ford
+        try {
+            GraphAlgorithms graph = new GraphAlgorithms("src/test1.txt");
+            int[] cost = new int[graph.size()];
+            int[] parent = new int[graph.size()];
+            if(graph.contains_negative_cycle_with_bellman(cost , parent))
+                System.out.println("The graph contains negative cycle.");
+            else
+                System.out.println("The graph does not contain negative cycle.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
