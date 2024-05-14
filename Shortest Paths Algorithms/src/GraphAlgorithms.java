@@ -49,7 +49,7 @@ public class GraphAlgorithms implements IGraphAlg{
         int k = 0;
         for(int i=0 ; i<V ; i++){
             for(int j=0 ; j<V ; j++){
-                if(this.graph[i][j]== Integer.MAX_VALUE){}
+                if(this.graph[i][j]== Integer.MAX_VALUE || i==j){}
                 else{
                     this.edges[k][0] = i;
                     this.edges[k][1] = j ;

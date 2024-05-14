@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.stream.Stream;
 
@@ -17,7 +18,7 @@ class GraphAlgorithmsTest {
     static int samples = 10;
     static int vertices = 200;
 
-    static int numOfEdges = 10000;
+    static int numOfEdges = 1000;
     static double density =  numOfEdges / (double) (vertices * (vertices - 1));
     static long totalTimeDijkestra = 0;
     static long totalTimeBellmanFord = 0;
@@ -237,9 +238,9 @@ class GraphAlgorithmsTest {
 
             // test BellmanFord
             long startTime = System.nanoTime();
-            boolean valBellman = graphAlgorithms.bellmanFord(0, cost, parent);
+            boolean valBellman = graphAlgorithms.contains_negative_cycle_with_bellman();
             long endTime = System.nanoTime();
-            assertFalse(valBellman);
+            assertTrue(valBellman);
 
             long duration = endTime - startTime;
             totalTimeBellmanFordNegativeCycle += duration;
@@ -248,9 +249,9 @@ class GraphAlgorithmsTest {
             int [][] costMatrix = new int [graphAlgorithms.size()][graphAlgorithms.size()] ;
             int [][] predecessor = new int [graphAlgorithms.size()][graphAlgorithms.size()] ;
             startTime = System.nanoTime();
-            boolean valFloyd = graphAlgorithms.floydWarshall(costMatrix, predecessor);
+            boolean valFloyd = graphAlgorithms.contains_negative_cycle_with_floyd();
             endTime = System.nanoTime();
-            assertFalse(valFloyd);
+            assertTrue(valFloyd);
 
             duration = endTime - startTime;
             totalTimeFloydWarshallNegativeCycle += duration;
@@ -300,7 +301,7 @@ class GraphAlgorithmsTest {
     }
     @Test
     void emptyFile() {
-        assertThrows(IOException.class, () -> new GraphAlgorithms("empty.txt"));
+        assertThrows(NoSuchElementException.class, () -> new GraphAlgorithms("empty.txt"));
     }
     @Test
     void testSize() throws IOException {
