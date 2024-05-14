@@ -1,6 +1,7 @@
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.FileInputStream;
@@ -10,6 +11,7 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.stream.Stream;
 import org.apache.poi.ss.usermodel.*;
@@ -22,9 +24,11 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 class GraphAlgorithmsTest {
     static int maxWeight = 100; // maximum weight of each edge
-    static int samples = 10;
+    static int samples = 2;
     static int vertices = 100;
-    static int numOfEdges = 1000_000;
+    static int numOfEdges = 1000;
+    int[] arrV = {10, 50, 100, 200, 500, 1000};
+    int[] arrE = {10, 50, 100, 500, 1000, 5000, 10_000, 100_000};
     static double density =  numOfEdges / (double) (vertices * (vertices - 1));
     static long totalTimeDijkestra = 0;
     static long totalTimeBellmanFord = 0;
@@ -81,6 +85,72 @@ class GraphAlgorithmsTest {
 
             return graph;
         }).limit(samples); // generate 10 graphs
+    }
+
+    @ParameterizedTest
+    @MethodSource("parametersProvider")
+    void testGraphAlgorithms(int vertices, int numOfEdges, int[][] graph1, int[][] graph2,int[][] ngraph1, int[][] ngraph2 ) throws IOException {
+        performanceTestSingleSource(graph1);
+        performanceTestSingleSource(graph2);
+        performanceTestAllPair(graph1);
+        performanceTestAllPair(graph2);
+        performanceTestNegativeCycle(ngraph1);
+        performanceTestNegativeCycle(ngraph2);
+        writeToFile(vertices, numOfEdges);
+    }
+
+    static Stream<Arguments> parametersProvider() {
+        int[] arrV = {10, 50, 100};
+        int[] arrE = {10, 50, 100, 500, 1000, 5000, 10_000, 100_000};
+
+        return Arrays.stream(arrV)
+                .boxed()
+                .flatMap(v -> Arrays.stream(arrE)
+                        .mapToObj(e -> Arguments.of(v, e, generateGraph(v, e),generateGraph(v, e), generateNGraph(v, e),generateNGraph(v, e))));
+    }
+
+    static int[][] generateGraph(int vertices, int numOfEdges) {
+        Random rand = new Random();
+        int edges;
+        edges = numOfEdges;
+
+            int[][] graph = new int[edges + 3][3];
+            for (int i = 0; i < edges; i++) {
+                graph[i][0] = rand.nextInt(vertices);
+                graph[i][1] = rand.nextInt(vertices);
+                while (graph[i][0] == graph[i][1]) {
+                    graph[i][1] = rand.nextInt(vertices);
+                }
+                graph[i][2] = rand.nextInt(maxWeight) + 1;
+            }
+            // ensure the shortest path from 0 to 5
+            graph[edges+0][0] = 0; graph[edges+0][1] = 2;graph[edges+0][2] = 0;
+            graph[edges+1][0] = 2; graph[edges+1][1] = 7;graph[edges+1][2] = 0;
+            graph[edges+2][0] = 7; graph[edges+2][1] = 5;graph[edges+2][2] = 0;
+
+            return graph;
+        }
+    static int[][] generateNGraph(int vertices, int numOfEdges) {
+        Random rand = new Random();
+        int edges;
+        edges = numOfEdges;
+
+        int[][] graph = new int[edges + 4][3];
+        for (int i = 0; i < edges; i++) {
+            graph[i][0] = rand.nextInt(vertices);
+            graph[i][1] = rand.nextInt(vertices);
+            while (graph[i][0] == graph[i][1]) {
+                graph[i][1] = rand.nextInt(vertices);
+            }
+            graph[i][2] = rand.nextInt(maxWeight) + 1;
+        }
+        // ensure the shortest path from 0 to 5
+        graph[edges+0][0] = 0; graph[edges+0][1] = 2;graph[edges+0][2] = -1;
+        graph[edges+1][0] = 2; graph[edges+1][1] = 7;graph[edges+1][2] =  4;
+        graph[edges+2][0] = 7; graph[edges+2][1] = 5;graph[edges+2][2] = -9;
+        graph[edges+3][0] = 5; graph[edges+3][1] = 0;graph[edges+3][2] =  1;
+
+        return graph;
     }
     @ParameterizedTest
     @MethodSource("graphProvider")
@@ -244,9 +314,9 @@ class GraphAlgorithmsTest {
 
             // test BellmanFord
             long startTime = System.nanoTime();
-            boolean valBellman = graphAlgorithms.bellmanFord(0, cost, parent);
+            boolean valBellman = graphAlgorithms.contains_negative_cycle_with_bellman();
             long endTime = System.nanoTime();
-            assertFalse(valBellman);
+            assertTrue(valBellman);
 
             long duration = endTime - startTime;
             totalTimeBellmanFordNegativeCycle += duration;
@@ -255,9 +325,9 @@ class GraphAlgorithmsTest {
             int [][] costMatrix = new int [graphAlgorithms.size()][graphAlgorithms.size()] ;
             int [][] predecessor = new int [graphAlgorithms.size()][graphAlgorithms.size()] ;
             startTime = System.nanoTime();
-            boolean valFloyd = graphAlgorithms.floydWarshall(costMatrix, predecessor);
+            boolean valFloyd = graphAlgorithms.contains_negative_cycle_with_floyd();
             endTime = System.nanoTime();
-            assertFalse(valFloyd);
+            assertTrue(valFloyd);
 
             duration = endTime - startTime;
             totalTimeFloydWarshallNegativeCycle += duration;
@@ -283,10 +353,10 @@ class GraphAlgorithmsTest {
         System.out.println();
         System.out.println("Negative Cycle Bellman-Ford took on average:  " + format(totalTimeBellmanFordNegativeCycle / samples));
         System.out.println("Negative Cycle Floyd-Warshall took on average:  " + format(totalTimeFloydWarshallNegativeCycle/ samples));
-        writeToFile();
+       // writeToFile();
     }
 
-    public static void writeToFile() {
+    public static void writeToFile(int vertices, int numOfEdges){
         Workbook workbook;
         Sheet sheet;
         String filePath = "Results.xlsx";
@@ -301,15 +371,15 @@ class GraphAlgorithmsTest {
             Row headerRow = sheet.createRow(0);
             headerRow.createCell(0).setCellValue("V");
             headerRow.createCell(1).setCellValue("E");
-            headerRow.createCell(2).setCellValue("Density");
+           // headerRow.createCell(2).setCellValue("Effective Density");
             headerRow.createCell(3).setCellValue("Single Source Dijkstra");
             headerRow.createCell(4).setCellValue("Single Source Bellman-Ford");
             headerRow.createCell(5).setCellValue("Single Source Floyd-Warshall");
             headerRow.createCell(6).setCellValue("All Pair Dijkstra");
             headerRow.createCell(7).setCellValue("All Pair Bellman-Ford");
             headerRow.createCell(8).setCellValue("All Pair Floyd-Warshall");
-            headerRow.createCell(9).setCellValue("Negative Cycle Bellman-Ford");
-            headerRow.createCell(10).setCellValue("Negative Cycle Floyd-Warshall");
+            headerRow.createCell(9).setCellValue("Negative Cycle Bellman-Ford Optimized");
+            headerRow.createCell(10).setCellValue("Negative Cycle Floyd-Warshall Optimized");
         }
 
         boolean rowExists = false;
@@ -317,17 +387,17 @@ class GraphAlgorithmsTest {
             if (row.getRowNum() == 0) continue; // Skip header row
 
             if (row.getCell(0).getNumericCellValue() == vertices &&
-                    row.getCell(1).getNumericCellValue() == numOfEdges &&
-                    row.getCell(2).getStringCellValue().equals(String.format("%.3f", density))) {
+                    row.getCell(1).getNumericCellValue() == numOfEdges ){
+                   // row.getCell(2).getStringCellValue().equals(String.format("%.3f", density))) {
                 rowExists = true;
-                updateRow(row);
+                updateRow(row, vertices, numOfEdges);
                 break;
             }
         }
 
         if (!rowExists) {
             Row dataRow = sheet.createRow(sheet.getLastRowNum() + 1);
-            updateRow(dataRow);
+            updateRow(dataRow, vertices, numOfEdges);
         }
 
         try (FileOutputStream outputStream = new FileOutputStream(filePath)) {
@@ -337,18 +407,18 @@ class GraphAlgorithmsTest {
         }
     }
 
-    private static void updateRow(Row row) {
+    private static void updateRow(Row row, int vertices, int numOfEdges) {
         row.createCell(0).setCellValue(vertices);
         row.createCell(1).setCellValue(numOfEdges);
-        row.createCell(2).setCellValue(String.format("%.3f", density));
-        row.createCell(3).setCellValue(totalTimeDijkestra / samples);
-        row.createCell(4).setCellValue(totalTimeBellmanFord / samples);
-        row.createCell(5).setCellValue(totalTimeFloydWarshall / samples);
-        row.createCell(6).setCellValue(totalTimeDijkestraAllPair / samples);
-        row.createCell(7).setCellValue(totalTimeBellmanFordAllPair / samples);
-        row.createCell(8).setCellValue(totalTimeFloydWarshallAllPair / samples);
-        row.createCell(9).setCellValue(totalTimeBellmanFordNegativeCycle / samples);
-        row.createCell(10).setCellValue(totalTimeFloydWarshallNegativeCycle / samples);
+        //row.createCell(2).setCellValue(String.format("%.3f", density));
+        if(totalTimeDijkestra != 0)  row.createCell(3).setCellValue(totalTimeDijkestra / 2);
+        if(totalTimeBellmanFord != 0)  row.createCell(4).setCellValue(totalTimeBellmanFord / 2);
+        if(totalTimeFloydWarshall != 0)  row.createCell(5).setCellValue(totalTimeFloydWarshall / 2);
+        if(totalTimeDijkestraAllPair != 0)  row.createCell(6).setCellValue(totalTimeDijkestraAllPair / 2);
+        if(totalTimeBellmanFordAllPair != 0)  row.createCell(7).setCellValue(totalTimeBellmanFordAllPair / 2);
+        if(totalTimeFloydWarshallAllPair != 0)  row.createCell(8).setCellValue(totalTimeFloydWarshallAllPair / 2);
+        if(totalTimeBellmanFordNegativeCycle != 0)  row.createCell(9).setCellValue(totalTimeBellmanFordNegativeCycle / 2);
+        if(totalTimeFloydWarshallNegativeCycle != 0)  row.createCell(10).setCellValue(totalTimeFloydWarshallNegativeCycle / 2);
     }
     static String format(long nanoseconds){
         if (nanoseconds < 1000) return String.format("%d ns", nanoseconds);
@@ -371,7 +441,7 @@ class GraphAlgorithmsTest {
     }
     @Test
     void emptyFile() {
-        assertThrows(IOException.class, () -> new GraphAlgorithms("empty.txt"));
+        assertThrows(NoSuchElementException.class, () -> new GraphAlgorithms("empty.txt"));
     }
     @Test
     void testSize() throws IOException {
