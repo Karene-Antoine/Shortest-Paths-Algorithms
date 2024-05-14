@@ -196,15 +196,13 @@ public class Main {
                         perform operation
                          */
                         boolean negative_cycle ;
-                        int [][] cost = new int[graph_algorithms.size()][graph_algorithms.size()];
-                        int [][] parent = new int[graph_algorithms.size()][graph_algorithms.size()];
-                        if(algo==1){
-                            negative_cycle = graph_algorithms.cost_between_all_pairs_with_bellman(cost,parent) ;
+                        if(algo==1) {
+                            negative_cycle = graph_algorithms.contains_negative_cycle_with_bellman();
                         }
                         else{
-                            negative_cycle = graph_algorithms.floydWarshall(cost , parent) ;
+                            negative_cycle = graph_algorithms.contains_negative_cycle_with_floyd() ;
                         }
-                        if(negative_cycle)
+                        if(!negative_cycle)
                             System.out.println(ANSI_RED+ "there isn\'t a negative cycle in the graph") ;
                         else
                             System.out.println(ANSI_RED + "there is a negative cycle in the graph") ;
