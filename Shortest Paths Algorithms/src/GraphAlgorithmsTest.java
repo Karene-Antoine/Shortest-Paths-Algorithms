@@ -3,6 +3,8 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -10,14 +12,19 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.stream.Stream;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 class GraphAlgorithmsTest {
     static int maxWeight = 100; // maximum weight of each edge
     static int samples = 10;
-    static int vertices = 200;
-
-    static int numOfEdges = 10000;
+    static int vertices = 100;
+    static int numOfEdges = 1000_000;
     static double density =  numOfEdges / (double) (vertices * (vertices - 1));
     static long totalTimeDijkestra = 0;
     static long totalTimeBellmanFord = 0;
@@ -276,9 +283,73 @@ class GraphAlgorithmsTest {
         System.out.println();
         System.out.println("Negative Cycle Bellman-Ford took on average:  " + format(totalTimeBellmanFordNegativeCycle / samples));
         System.out.println("Negative Cycle Floyd-Warshall took on average:  " + format(totalTimeFloydWarshallNegativeCycle/ samples));
-
+        writeToFile();
     }
 
+    public static void writeToFile() {
+        Workbook workbook;
+        Sheet sheet;
+        String filePath = "Results.xlsx";
+
+        try (FileInputStream inputStream = new FileInputStream(filePath)) {
+            workbook = new XSSFWorkbook(inputStream);
+            sheet = workbook.getSheetAt(0);
+        } catch (IOException e) {
+            workbook = new XSSFWorkbook();
+            sheet = workbook.createSheet("Results");
+
+            Row headerRow = sheet.createRow(0);
+            headerRow.createCell(0).setCellValue("V");
+            headerRow.createCell(1).setCellValue("E");
+            headerRow.createCell(2).setCellValue("Density");
+            headerRow.createCell(3).setCellValue("Single Source Dijkstra");
+            headerRow.createCell(4).setCellValue("Single Source Bellman-Ford");
+            headerRow.createCell(5).setCellValue("Single Source Floyd-Warshall");
+            headerRow.createCell(6).setCellValue("All Pair Dijkstra");
+            headerRow.createCell(7).setCellValue("All Pair Bellman-Ford");
+            headerRow.createCell(8).setCellValue("All Pair Floyd-Warshall");
+            headerRow.createCell(9).setCellValue("Negative Cycle Bellman-Ford");
+            headerRow.createCell(10).setCellValue("Negative Cycle Floyd-Warshall");
+        }
+
+        boolean rowExists = false;
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) continue; // Skip header row
+
+            if (row.getCell(0).getNumericCellValue() == vertices &&
+                    row.getCell(1).getNumericCellValue() == numOfEdges &&
+                    row.getCell(2).getStringCellValue().equals(String.format("%.3f", density))) {
+                rowExists = true;
+                updateRow(row);
+                break;
+            }
+        }
+
+        if (!rowExists) {
+            Row dataRow = sheet.createRow(sheet.getLastRowNum() + 1);
+            updateRow(dataRow);
+        }
+
+        try (FileOutputStream outputStream = new FileOutputStream(filePath)) {
+            workbook.write(outputStream);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void updateRow(Row row) {
+        row.createCell(0).setCellValue(vertices);
+        row.createCell(1).setCellValue(numOfEdges);
+        row.createCell(2).setCellValue(String.format("%.3f", density));
+        row.createCell(3).setCellValue(totalTimeDijkestra / samples);
+        row.createCell(4).setCellValue(totalTimeBellmanFord / samples);
+        row.createCell(5).setCellValue(totalTimeFloydWarshall / samples);
+        row.createCell(6).setCellValue(totalTimeDijkestraAllPair / samples);
+        row.createCell(7).setCellValue(totalTimeBellmanFordAllPair / samples);
+        row.createCell(8).setCellValue(totalTimeFloydWarshallAllPair / samples);
+        row.createCell(9).setCellValue(totalTimeBellmanFordNegativeCycle / samples);
+        row.createCell(10).setCellValue(totalTimeFloydWarshallNegativeCycle / samples);
+    }
     static String format(long nanoseconds){
         if (nanoseconds < 1000) return String.format("%d ns", nanoseconds);
         if (nanoseconds < 1000000) return String.format("%d us", nanoseconds / 1000);
