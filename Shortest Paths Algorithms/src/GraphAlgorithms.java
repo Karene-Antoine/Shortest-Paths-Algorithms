@@ -1,28 +1,21 @@
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.* ;
-import java.lang.reflect.Array;
-import java.util.Arrays;
-import java.util.PriorityQueue;
-import java.util.Scanner;
-import java.util.Stack;
+import java.util.* ;
 
 public class GraphAlgorithms implements IGraphAlg{
     private String filePath;
     private int[][] graph;
     private int[][] edges ;
-    public GraphAlgorithms(String filePath) throws IOException {
+    private int real_edge_density ;
+
+    public GraphAlgorithms(String filePath) throws FileNotFoundException{
         this.filePath = filePath;
         this.readGraph();
     }
 
-    private void readGraph() throws IOException {
+    private void readGraph() throws FileNotFoundException{
         // Read the graph from the file
         File file = new File(this.filePath);
         Scanner scanner = new Scanner(file);
-        // throws empty file exception
-        if(!scanner.hasNextLine())
-            throw new IOException() ;
 
         // Read number of vertices and edges
         int V = scanner.nextInt();
@@ -36,22 +29,39 @@ public class GraphAlgorithms implements IGraphAlg{
                     graph[i][j] = Integer.MAX_VALUE ;
             }
         }
-
-        this.edges = new int[E][3] ;
-
-        // Read edges
+        // Read adjacency matrix
         for (int i = 0; i < E; i++) {
             int source = scanner.nextInt();
             int destination = scanner.nextInt();
             int weight = scanner.nextInt();
             // Update graph with edge weight
-            this.graph[source][destination] = weight;
-            this.edges[i][0] = source ;
-            this.edges[i][1] = destination ;
-            this.edges[i][2] = weight ;
-
+            if(this.graph[source][destination] != Integer.MAX_VALUE)  // updated previous
+                this.graph[source][destination] = Math.min(weight , this.graph[source][destination] );  // get min edge
+            else {
+                this.graph[source][destination] = weight ;
+                this.real_edge_density ++ ;  // new edge
+            }
         }
         scanner.close();
+
+        // reading edges
+        this.edges = new int[this.real_edge_density][3] ;
+        int k = 0;
+        for(int i=0 ; i<V ; i++){
+            for(int j=0 ; j<V ; j++){
+                if(this.graph[i][j]== Integer.MAX_VALUE){}
+                else{
+                    this.edges[k][0] = i;
+                    this.edges[k][1] = j ;
+                    this.edges[k][2] = this.graph[i][j] ;
+                    k++ ;
+                }
+                if(k==this.real_edge_density)
+                    break ;
+            }
+            if(k==this.real_edge_density)
+                break ;
+        }
     }
 
     @Override
@@ -59,6 +69,10 @@ public class GraphAlgorithms implements IGraphAlg{
         return this.graph.length;
     }
 
+    @Override
+    public int no_of_unique_edges(){
+        return this.real_edge_density ;
+    }
 
 
     private static class Node {
@@ -99,7 +113,7 @@ public class GraphAlgorithms implements IGraphAlg{
             }
         }
     }
-
+    @Override
     public void cost_between_allpairs_with_dijkestra(int[][] cost , int [][] parent){
         for (int i = 0; i < this.size(); i++)
             dijkestra(i , cost[i] , parent[i]);
@@ -138,6 +152,7 @@ public class GraphAlgorithms implements IGraphAlg{
         return true ;
     }
 
+    @Override
     // return true if no negative cycle and false if there is negative cycle
     public boolean cost_between_all_pairs_with_bellman (int[][] cost , int[][] parent){
         boolean negative_cycle = true ;
@@ -145,6 +160,25 @@ public class GraphAlgorithms implements IGraphAlg{
             negative_cycle = negative_cycle && bellmanFord(i , cost[i] , parent[i]);
         return negative_cycle ;
     }
+    @Override
+    public boolean contains_negative_cycle_with_bellman(){
+        int [] cost = new int[this.size()] ;
+        int [] parent = new int[this.size()] ;
+        boolean [] visited = new boolean[this.size()] ;
+        Arrays.fill(visited , false) ;
+        for(int i=0; i<this.size() ; i++){
+            if(!visited[i]){
+                if(!this.bellmanFord(i , cost , parent))
+                    return true ;
+                for(int j=0 ; j<this.size() ; j++){
+                    if(parent[j] != -1)
+                        visited[j] = true ;
+                }
+            }
+        }
+        return false ;
+    }
+
     @Override
     public boolean floydWarshall(int[][] cost, int[][] predecessor) {
         //copy graph array into cost array
@@ -181,16 +215,23 @@ public class GraphAlgorithms implements IGraphAlg{
         }
         return true;
     }
+    @Override
+    public boolean contains_negative_cycle_with_floyd(){
+        int [][] cost = new int[this.size()][this.size()] ;
+        int [][] parent = new int[this.size()][this.size()] ;
+        return !this.floydWarshall(cost , parent) ;
+    }
 
-
+    @Override
     public int cost(int [] cost , int destination){
         return cost[destination] ;
     }
-
+    @Override
     public int cost_from_source(int [][] cost , int source ,  int destination){
         return cost[source][destination] ;
     }
 
+    @Override
     public String get_path(int[] parent , int[] cost , int source , int destination){
         if(cost[destination] == Integer.MAX_VALUE) {
             String path = "No path from " + source + " to " + destination +"." ;
@@ -216,6 +257,7 @@ public class GraphAlgorithms implements IGraphAlg{
         }
     }
 
+    @Override
     public String get_path_from_source (int[][] parent , int[][] cost , int source , int destination){
         return get_path(parent[source] , cost[source] , source , destination) ;
     }
